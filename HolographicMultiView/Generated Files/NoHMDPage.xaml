@@ -1,0 +1,14 @@
+﻿<Page x:ConnectionId='1'
+    x:Class="HolographicXAMLView.NoHMDPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:HolographicXAMLView"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"                     >
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"  Margin="20">
+        <TextBlock x:ConnectionId='2' x:Name="warningText" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="36">You don't have an HMD connected</TextBlock>
+    </Grid>
+</Page>
+
