@@ -55,6 +55,7 @@
 *.pidb
 *.log
 *.scc
+*.xbf 
 
 # Visual C++ cache files
 ipch/
