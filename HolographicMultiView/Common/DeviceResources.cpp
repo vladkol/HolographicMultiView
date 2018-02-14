@@ -305,11 +305,15 @@ void DX::DeviceResources::RegisterDeviceNotify(DX::IDeviceNotify* deviceNotify)
 // is entering an idle state and that temporary buffers can be reclaimed for use by other apps.
 void DX::DeviceResources::Trim()
 {
-    m_d3dContext->ClearState();
+	if(m_d3dContext)
+		m_d3dContext->ClearState();
 
-    ComPtr<IDXGIDevice3> dxgiDevice;
-    DX::ThrowIfFailed(m_d3dDevice.As(&dxgiDevice));
-    dxgiDevice->Trim();
+	if (m_d3dDevice)
+	{
+		ComPtr<IDXGIDevice3> dxgiDevice;
+		DX::ThrowIfFailed(m_d3dDevice.As(&dxgiDevice));
+		dxgiDevice->Trim();
+	}
 }
 
 // Present the contents of the swap chain to the screen.

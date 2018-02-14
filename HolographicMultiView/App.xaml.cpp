@@ -5,7 +5,7 @@
 
 #include "pch.h"
 #include "App.xaml.h"
-#include "NoHMDPage.xaml.h"
+#include "SlateUIPage.xaml.h"
 
 using namespace HolographicXAMLView;
 
@@ -70,7 +70,7 @@ void App::OnLaunched(Windows::ApplicationModel::Activation::LaunchActivatedEvent
                 // When the navigation stack isn't restored navigate to the first page,
                 // configuring the new page by passing required information as a navigation
                 // parameter
-                rootFrame->Navigate(TypeName(NoHMDPage::typeid), e->Arguments);
+                rootFrame->Navigate(TypeName(SlateUIPage::typeid), e->Arguments);
             }
             // Place the frame in the current Window
             Window::Current->Content = rootFrame;
@@ -87,7 +87,7 @@ void App::OnLaunched(Windows::ApplicationModel::Activation::LaunchActivatedEvent
                 // When the navigation stack isn't restored navigate to the first page,
                 // configuring the new page by passing required information as a navigation
                 // parameter
-                rootFrame->Navigate(TypeName(NoHMDPage::typeid), e->Arguments);
+                rootFrame->Navigate(TypeName(SlateUIPage::typeid), e->Arguments);
             }
             // Ensure the current window is active
             Window::Current->Activate();

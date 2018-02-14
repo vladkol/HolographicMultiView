@@ -155,8 +155,9 @@
     <ClInclude Include="Content\SpatialInputHandler.h" />
     <ClInclude Include="Content\ShaderStructures.h" />
     <ClInclude Include="Content\SpinningCubeRenderer.h" />
-    <ClInclude Include="NoHMDPage.xaml.h">
-      <DependentUpon>NoHMDPage.xaml</DependentUpon>
+    <ClInclude Include="MRViewUtils.h" />
+    <ClInclude Include="SlateUIPage.xaml.h">
+      <DependentUpon>SlateUIPage.xaml</DependentUpon>
     </ClInclude>
     <ClInclude Include="pch.h" />
   </ItemGroup>
@@ -170,8 +171,8 @@
     <ClCompile Include="Common\CameraResources.cpp" />
     <ClCompile Include="Content\SpatialInputHandler.cpp" />
     <ClCompile Include="Content\SpinningCubeRenderer.cpp" />
-    <ClCompile Include="NoHMDPage.xaml.cpp">
-      <DependentUpon>NoHMDPage.xaml</DependentUpon>
+    <ClCompile Include="SlateUIPage.xaml.cpp">
+      <DependentUpon>SlateUIPage.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -204,7 +205,7 @@
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml" />
-    <Page Include="NoHMDPage.xaml" />
+    <Page Include="SlateUIPage.xaml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -14,28 +14,30 @@ using namespace Windows::Foundation;
 using namespace Windows::Graphics::Holographic;
 using namespace Windows::UI::Core;
 
-// The main function is only used to initialize our IFrameworkView class.
-// Under most circumstances, you should not need to modify this function.
 [Platform::MTAThread]
 int main(Platform::Array<Platform::String^>^)
 {
-	bool isHolographic = HolographicSpace::IsSupported && HolographicSpace::IsAvailable;
+	bool holographicAvailable = false;
+	
+	// NOTE: Uncomment next 2 lines to start with the holographic view if a Mixed Reality HMD is connected
+	//if (HolographicSpace::IsSupported && HolographicSpace::IsAvailable)
+	//	holographicAvailable = true;
 
-	if (!isHolographic)
-	{
-		AppView::RunXAMLView();
-	}
-	else
+	if (holographicAvailable)
 	{
 		AppViewSource^ appViewSource = ref new ::AppViewSource();
 		CoreApplication::Run(appViewSource);
+	}
+	else
+	{
+		AppView::RunXAMLView();
 	}
     return 0;
 }
 
 IFrameworkView^ AppViewSource::CreateView()
 {
-    return ref new AppView();
+	return ref new AppView();
 }
 
 AppView::AppView()
@@ -54,8 +56,6 @@ void AppView::RunXAMLCallback(Windows::UI::Xaml::ApplicationInitializationCallba
 
 // IFrameworkView methods
 
-// The first method called when the IFrameworkView is being created.
-// Use this method to subscribe for Windows shell events and to initialize your app.
 void AppView::Initialize(CoreApplicationView^ applicationView)
 {
     applicationView->Activated +=
