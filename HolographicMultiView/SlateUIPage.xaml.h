@@ -37,5 +37,8 @@ namespace HolographicXAMLView
 		void OnIsAvailableChanged(Platform::Object ^sender, Platform::Object ^args);
 
 		void Button_Click(Platform::Object^ sender, Windows::UI::Xaml::RoutedEventArgs^ e);
+
+	private:
+		bool m_switched;
 	};
 }

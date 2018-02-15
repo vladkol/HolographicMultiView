@@ -37,7 +37,7 @@ using namespace Windows::UI::Xaml::Media;
 using namespace Windows::UI::Xaml::Media::Imaging;
 using namespace Windows::UI::Xaml::Navigation;
 
-SlateUIPage::SlateUIPage()
+SlateUIPage::SlateUIPage() : m_switched(false)
 {
 	InitializeComponent();
 }
@@ -70,31 +70,52 @@ void SlateUIPage::ShowMixedRealityView()
 {
 	auto appViewSource = ref new HolographicMultiView::AppViewSource();
 	Windows::ApplicationModel::Core::CoreApplicationView^ view = Windows::ApplicationModel::Core::CoreApplication::CreateNewView(appViewSource);
-	
-	GetViewIdAsync(view).then([this](int id)
+
+	if (view != nullptr)
 	{
-		SwitchToViewAsync(id, true);
-	});
+		GetViewIdAsync(view).then([this](int id)
+		{
+			if (id != 0)
+			{
+				SwitchToViewAsync(id, true).then([this](bool switched)
+				{
+					if (switched)
+					{
+						m_switched = true;
+						UpdateHolographicState(HolographicState::Available);
+					}
+				});
+			}
+		});
+	}
 }
 
 void SlateUIPage::UpdateHolographicState(HolographicState state)
 {
 	Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::High, ref new Windows::UI::Core::DispatchedHandler([this, state]()
 	{
-		switch (state)
+		if (m_switched)
 		{
-		case HolographicState::NotSupported:
-			warningText->Text = "Windows Mixed Reality is not supported on your PC.";
+			warningText->Text = "Mixed Reality view has been activated.";
 			showMRButton->IsEnabled = false;
-			break;
-		case HolographicState::NotAvailable:
-			warningText->Text = "You don't have a Mixed Reality HMD connected. Connect your HMD, then we switch views.";
-			showMRButton->IsEnabled = false;
-			break;
-		case HolographicState::Available:
-			warningText->Text = "You can switch to Mixed Reality!";
-			showMRButton->IsEnabled = true;
-			break;
+		}
+		else
+		{
+			switch (state)
+			{
+			case HolographicState::NotSupported:
+				warningText->Text = "Windows Mixed Reality is not supported on your PC.";
+				showMRButton->IsEnabled = false;
+				break;
+			case HolographicState::NotAvailable:
+				warningText->Text = "You don't have a Mixed Reality HMD connected. Connect your HMD, then we switch views.";
+				showMRButton->IsEnabled = false;
+				break;
+			case HolographicState::Available:
+				warningText->Text = "You can switch to Mixed Reality!";
+				showMRButton->IsEnabled = true;
+				break;
+			}
 		}
 	}));
 

@@ -5,7 +5,7 @@
 inline concurrency::task<int> GetViewIdAsync(Windows::ApplicationModel::Core::CoreApplicationView^ view)
 {
 	Platform::Agile<Windows::ApplicationModel::Core::CoreApplicationView> agileView(view);
-	std::vector<int>* views = new std::vector<int>();
+	std::vector<int>* views = new std::vector<int>(1, 0);
 
 	return concurrency::create_task(
 		view->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::High,
@@ -14,7 +14,7 @@ inline concurrency::task<int> GetViewIdAsync(Windows::ApplicationModel::Core::Co
 		int resultId = Windows::UI::ViewManagement::ApplicationView::GetForCurrentView()->Id;
 		agileView->CoreWindow->Activate();
 
-		views->push_back(resultId);
+		(*views)[0] = resultId;
 
 	}))).then([views] () -> int
 	{
@@ -33,9 +33,12 @@ inline concurrency::task<bool> SwitchToViewAsync(int viewId, bool showAsStandalo
 		auto currentViewWindow = Windows::UI::Core::CoreWindow::GetForCurrentThread();
 		int currentViewId = Windows::UI::ViewManagement::ApplicationView::GetApplicationViewIdForWindow(currentViewWindow);
 
-		return concurrency::create_task(Windows::UI::ViewManagement::ApplicationViewSwitcher::SwitchAsync(viewId, currentViewId)).then([]() -> bool
+		auto switchAction = Windows::UI::ViewManagement::ApplicationViewSwitcher::SwitchAsync(viewId, currentViewId);
+		auto t = concurrency::create_task(switchAction);
+		
+		return t.then([switchAction]() -> bool
 		{
-			return true;
+			return SUCCEEDED(switchAction->ErrorCode.Value);
 		});
 	}
 
