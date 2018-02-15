@@ -9,11 +9,7 @@
 #include "MRViewUtils.h"
 
 #include <string>
-#include <sstream> 
-#include <algorithm>
 #include <ppltasks.h>
-#include <robuffer.h> // IBufferByteAccess
-
 
 using namespace HolographicXAMLView;
 
@@ -37,7 +33,7 @@ using namespace Windows::UI::Xaml::Media;
 using namespace Windows::UI::Xaml::Media::Imaging;
 using namespace Windows::UI::Xaml::Navigation;
 
-SlateUIPage::SlateUIPage() : m_switched(false)
+SlateUIPage::SlateUIPage() : m_switched(false), m_closed(false)
 {
 	InitializeComponent();
 }
@@ -55,7 +51,13 @@ void SlateUIPage::Page_Loaded(Platform::Object^ sender, Windows::UI::Xaml::Route
 			HolographicState::Available : HolographicState::NotAvailable);
 
 		Windows::Graphics::Holographic::HolographicSpace::IsAvailableChanged += ref new Windows::Foundation::EventHandler<Platform::Object ^>(this, &SlateUIPage::OnIsAvailableChanged);
+		isInImmersive->Visibility = Windows::ApplicationModel::Preview::Holographic::HolographicApplicationPreview::IsCurrentViewPresentedOnHolographicDisplay() ? 
+			Windows::UI::Xaml::Visibility::Visible : Windows::UI::Xaml::Visibility::Collapsed;
 	}
+
+	// Handle closing primary (desktop) view. Once it's closed, we will close the immersive one too.
+	Windows::UI::ViewManagement::ApplicationView::GetForCurrentView()->Consolidated += 
+		ref new TypedEventHandler<Windows::UI::ViewManagement::ApplicationView^, Windows::UI::ViewManagement::ApplicationViewConsolidatedEventArgs^>(this, &SlateUIPage::OnConsolidatedOrClosed);
 }
 
 
@@ -64,16 +66,77 @@ void SlateUIPage::OnIsAvailableChanged(Platform::Object ^sender, Platform::Objec
 	UpdateHolographicState(
 		Windows::Graphics::Holographic::HolographicSpace::IsAvailable ?
 		HolographicState::Available : HolographicState::NotAvailable);
+
+	Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::High, ref new Windows::UI::Core::DispatchedHandler([this]()
+	{
+		eventLog->Text = "HMD connection status changed.";
+	}));
+}
+
+
+void SlateUIPage::OnConsolidatedOrClosed(Windows::UI::ViewManagement::ApplicationView^, Windows::UI::ViewManagement::ApplicationViewConsolidatedEventArgs^)
+{
+	// Handle closing primary (desktop) view. Once it's closed, close the immersive one too.
+
+	m_closed = true;
+	if (m_immersiveView != nullptr)
+	{
+		m_immersiveView->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::High, ref new Windows::UI::Core::DispatchedHandler([this]()
+		{
+			// Closing the immersive view, so we are back to "Cliff House" 
+			Windows::UI::ViewManagement::ApplicationView::GetForCurrentView()->TryConsolidateAsync();
+		}));
+	}
+}
+
+// If the user goes back to "Cliff House", the immersive view becomes hidden.  
+void SlateUIPage::OnImmersiveViewWindowVisibilityChanged(Windows::UI::Core::CoreWindow ^ sender, Windows::UI::Core::VisibilityChangedEventArgs ^ args)
+{
+	if (!args->Visible && !m_closed)
+	{
+		Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::High, ref new Windows::UI::Core::DispatchedHandler([this]()
+		{
+			eventLog->Text = "Immersive view is hidden.";
+		}));
+	}
+}
+
+// Immersive shell may close the immersive view. Let's handle it. 
+void SlateUIPage::OnImmersiveViewConsolidatedOrClosed(Windows::UI::ViewManagement::ApplicationView^, Windows::UI::ViewManagement::ApplicationViewConsolidatedEventArgs^)
+{
+	if (!m_closed)
+	{
+		m_switched = false;
+		m_immersiveView = nullptr;
+		UpdateHolographicState(HolographicState::Available);
+
+		Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::High, ref new Windows::UI::Core::DispatchedHandler([this]()
+		{
+			eventLog->Text = "Immersive view was closed.";
+		}));
+	}
 }
 
 void SlateUIPage::ShowMixedRealityView()
 {
-	auto appViewSource = ref new HolographicMultiView::AppViewSource();
-	Windows::ApplicationModel::Core::CoreApplicationView^ view = Windows::ApplicationModel::Core::CoreApplication::CreateNewView(appViewSource);
-
-	if (view != nullptr)
+	if (m_immersiveView == nullptr)
 	{
-		GetViewIdAsync(view).then([this](int id)
+		auto appViewSource = ref new HolographicMultiView::AppViewSource();
+		m_immersiveView = Windows::ApplicationModel::Core::CoreApplication::CreateNewView(appViewSource);
+
+		m_immersiveView->Dispatcher->RunAsync(Windows::UI::Core::CoreDispatcherPriority::High, ref new Windows::UI::Core::DispatchedHandler([this]()
+		{
+			m_immersiveView->CoreWindow->VisibilityChanged +=
+				ref new TypedEventHandler<CoreWindow^, VisibilityChangedEventArgs^>(this, &SlateUIPage::OnImmersiveViewWindowVisibilityChanged);
+
+			Windows::UI::ViewManagement::ApplicationView::GetForCurrentView()->Consolidated +=
+				ref new TypedEventHandler<Windows::UI::ViewManagement::ApplicationView^, Windows::UI::ViewManagement::ApplicationViewConsolidatedEventArgs^>(this, &SlateUIPage::OnImmersiveViewConsolidatedOrClosed);
+		}));
+	}
+
+	if (m_immersiveView != nullptr)
+	{
+		GetViewIdAsync(m_immersiveView.Get()).then([this](int id)
 		{
 			if (id != 0)
 			{
@@ -83,6 +146,8 @@ void SlateUIPage::ShowMixedRealityView()
 					{
 						m_switched = true;
 						UpdateHolographicState(HolographicState::Available);
+
+						eventLog->Text = "";
 					}
 				});
 			}
@@ -97,7 +162,7 @@ void SlateUIPage::UpdateHolographicState(HolographicState state)
 		if (m_switched)
 		{
 			warningText->Text = "Mixed Reality view has been activated.";
-			showMRButton->IsEnabled = false;
+			showMRButton->IsEnabled = true;
 		}
 		else
 		{
@@ -126,5 +191,8 @@ void SlateUIPage::Button_Click(Platform::Object^ sender, Windows::UI::Xaml::Rout
 {
 	ShowMixedRealityView();
 }
+
+
+
 
 

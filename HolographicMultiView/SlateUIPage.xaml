@@ -11,6 +11,9 @@
         <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
             <TextBlock x:Name="warningText" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="36" TextWrapping="WrapWholeWords">You don't have a Mixed Reality HMD connected. Connect your HMD, then we switch views.</TextBlock>
             <Button Margin="16" Click="Button_Click" x:Name="showMRButton">Show Mixed Reality</Button>
+            <!--<CheckBox Margin="16" x:Name="showWhenUserIsPresent" IsChecked="True">Show when user puts HMD on</CheckBox>-->
+            <TextBlock Margin="16, 0, 0, 0" FontSize="16" x:Name="isInImmersive" Visibility="Collapsed">This view is in the Immershive Shell</TextBlock>
+            <TextBlock Margin="0, 16, 0, 0" FontSize="24" x:Name="eventLog"></TextBlock>
         </StackPanel>
     </Grid>
 </Page>
